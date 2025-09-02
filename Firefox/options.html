@@ -1,25 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Summarizer - Settings</title>
-    <link rel="stylesheet" href="options.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Settings</h1>
-        
-        <div class="setting-group">
-            <label for="prompt-textarea">Custom Prompt:</label>
-            <textarea id="prompt-textarea" placeholder="Loading default prompt..."></textarea>
-            <div class="button-group">
-                <button id="save-button">Save</button>
-                <button id="reset-button">Reset to Default</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>YouTube Video Summarizer - Settings</title>
+        <link rel="stylesheet" href="options.css" />
+        <link
+            href="https://fonts.googleapis.com/icon?family=Material+Icons"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div class="container">
+            <header class="header">
+                <div class="logo">
+                    <span class="material-icons">settings</span>
+                </div>
+                <h1>Summarizer Settings</h1>
+            </header>
+
+            <div class="setting-group">
+                <h2 for="prompt-textarea">
+                    <span class="material-icons">smart_display</span>
+                    Youtube Summarizer Prompt:
+                </h2>
+                <textarea
+                    id="prompt-textarea"
+                    placeholder="Loading default prompt..."
+                ></textarea>
+                <div class="button-group">
+                    <button id="save-button">
+                        <span class="material-icons">save</span>
+                        Save
+                    </button>
+                    <button id="reset-button">
+                        <span class="material-icons">restart_alt</span>
+                        Reset to Default
+                    </button>
+                </div>
+                <div id="status-message"></div>
             </div>
-            <div id="status-message"></div>
+
+            <div class="setting-group">
+                <h2 for="web-prompt-textarea">
+                    <span class="material-icons">public</span>
+                    Web Page Summarizer Prompt:
+                </h2>
+                <textarea
+                    id="web-prompt-textarea"
+                    placeholder="Loading default webpage prompt..."
+                ></textarea>
+                <div class="button-group">
+                    <button id="save-web-button">
+                        <span class="material-icons">save</span>
+                        Save
+                    </button>
+                    <button id="reset-web-button">
+                        <span class="material-icons">restart_alt</span>
+                        Reset to Default
+                    </button>
+                </div>
+                <div id="web-status-message"></div>
+
+                <div class="summarizer-service">
+                    <h3>
+                        <span class="material-icons"
+                            >integration_instructions</span
+                        >
+                        Choose Summarizer Service:
+                    </h3>
+                    <div class="radio-options">
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="gemini"
+                                checked
+                            />
+                            <span>Gemini</span>
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="chatgpt"
+                            />
+                            <span>ChatGPT</span>
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="grok"
+                            />
+                            <span>Grok</span>
+                        </label>
+                    </div>
+                    <div id="service-status-message"></div>
+                </div>
+            </div>
         </div>
-    </div>
-    <script src="options.js"></script>
-</body>
+        <div class="footer">
+            <p>YouTube Video Summarizer & Web Page Summarizer Extension</p>
+        </div>
+        <script src="options.js"></script>
+    </body>
 </html>
