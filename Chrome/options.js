@@ -34,52 +34,117 @@ Section 2: <Descriptive title>
 Conclusion
 - ...
 `;
+const DEFAULT_WEB_PROMPT = `summarize`;
 
-document.addEventListener('DOMContentLoaded', function() {
-    const promptTextarea = document.getElementById('prompt-textarea');
-    const saveButton = document.getElementById('save-button');
-    const resetButton = document.getElementById('reset-button');
-    const statusMessage = document.getElementById('status-message');
+document.addEventListener("DOMContentLoaded", function () {
+  const promptTextarea = document.getElementById("prompt-textarea");
+  const saveButton = document.getElementById("save-button");
+  const resetButton = document.getElementById("reset-button");
+  const statusMessage = document.getElementById("status-message");
+  const webPromptTextarea = document.getElementById("web-prompt-textarea");
+  const saveWebButton = document.getElementById("save-web-button");
+  const resetWebButton = document.getElementById("reset-web-button");
+  const webStatusMessage = document.getElementById("web-status-message");
 
-    // Load saved prompt or use default
-    chrome.storage.sync.get(['customPrompt'], (result) => {
-        promptTextarea.value = result.customPrompt || DEFAULT_PROMPT;
-        promptTextarea.placeholder = DEFAULT_PROMPT;
+  // Load saved prompt or use default
+  chrome.storage.sync.get(["customPrompt"], (result) => {
+    promptTextarea.value = result.customPrompt || DEFAULT_PROMPT;
+    promptTextarea.placeholder = DEFAULT_PROMPT;
+  });
+
+  // Load saved webpage prompt or use default
+  chrome.storage.sync.get(["customWebPrompt"], (result) => {
+    webPromptTextarea.value = result.customWebPrompt || DEFAULT_WEB_PROMPT;
+    webPromptTextarea.placeholder = DEFAULT_WEB_PROMPT;
+  });
+
+  // Save webpage prompt
+  saveWebButton.addEventListener("click", function () {
+    const customWebPrompt = webPromptTextarea.value.trim();
+    chrome.storage.sync.set(
+      {
+        customWebPrompt: customWebPrompt,
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          showWebStatusMessage(
+            "Error saving webpage prompt: " + chrome.runtime.lastError.message,
+            "error",
+          );
+        } else {
+          showWebStatusMessage("Webpage prompt saved successfully!", "success");
+        }
+      },
+    );
+  });
+
+  // Reset to default webpage prompt
+  resetWebButton.addEventListener("click", function () {
+    webPromptTextarea.value = DEFAULT_WEB_PROMPT;
+    chrome.storage.sync.remove(["customWebPrompt"], () => {
+      if (chrome.runtime.lastError) {
+        showWebStatusMessage(
+          "Error resetting webpage prompt: " + chrome.runtime.lastError.message,
+          "error",
+        );
+      } else {
+        showWebStatusMessage("Webpage prompt reset to default!", "success");
+      }
     });
+  });
 
-    // Save custom prompt
-    saveButton.addEventListener('click', function() {
-        const customPrompt = promptTextarea.value.trim();
-        chrome.storage.sync.set({
-            customPrompt: customPrompt
-        }, () => {
-            if (chrome.runtime.lastError) {
-                showStatusMessage('Error saving prompt: ' + chrome.runtime.lastError.message, 'error');
-            } else {
-                showStatusMessage('Prompt saved successfully!', 'success');
-            }
-        });
+  // Save custom prompt
+  saveButton.addEventListener("click", function () {
+    const customPrompt = promptTextarea.value.trim();
+    chrome.storage.sync.set(
+      {
+        customPrompt: customPrompt,
+      },
+      () => {
+        if (chrome.runtime.lastError) {
+          showStatusMessage(
+            "Error saving prompt: " + chrome.runtime.lastError.message,
+            "error",
+          );
+        } else {
+          showStatusMessage("Prompt saved successfully!", "success");
+        }
+      },
+    );
+  });
+
+  // Reset to default prompt
+  resetButton.addEventListener("click", function () {
+    promptTextarea.value = DEFAULT_PROMPT;
+    chrome.storage.sync.remove(["customPrompt"], () => {
+      if (chrome.runtime.lastError) {
+        showStatusMessage(
+          "Error resetting prompt: " + chrome.runtime.lastError.message,
+          "error",
+        );
+      } else {
+        showStatusMessage("Prompt reset to default!", "success");
+      }
     });
+  });
 
-    // Reset to default prompt
-    resetButton.addEventListener('click', function() {
-        promptTextarea.value = DEFAULT_PROMPT;
-        chrome.storage.sync.remove(['customPrompt'], () => {
-            if (chrome.runtime.lastError) {
-                showStatusMessage('Error resetting prompt: ' + chrome.runtime.lastError.message, 'error');
-            } else {
-                showStatusMessage('Prompt reset to default!', 'success');
-            }
-        });
-    });
+  function showWebStatusMessage(message, type) {
+    webStatusMessage.textContent = message;
+    webStatusMessage.className = type;
+    webStatusMessage.style.display = "block";
 
-    function showStatusMessage(message, type) {
-        statusMessage.textContent = message;
-        statusMessage.className = type;
-        statusMessage.style.display = 'block';
-        
-        setTimeout(() => {
-            statusMessage.style.display = 'none';
-        }, 3000);
-    }
+    setTimeout(() => {
+      webStatusMessage.style.display = "none";
+    }, 3000);
+  }
+
+  function showStatusMessage(message, type) {
+    statusMessage.textContent = message;
+    statusMessage.className = type;
+    statusMessage.style.display = "block";
+
+    setTimeout(() => {
+      statusMessage.style.display = "none";
+    }, 3000);
+  }
 });

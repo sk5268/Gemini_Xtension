@@ -1,25 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Video Summarizer - Settings</title>
-    <link rel="stylesheet" href="options.css">
-</head>
-<body>
-    <div class="container">
-        <h1>Settings</h1>
-        
-        <div class="setting-group">
-            <label for="prompt-textarea">Custom Prompt:</label>
-            <textarea id="prompt-textarea" placeholder="Loading default prompt..."></textarea>
-            <div class="button-group">
-                <button id="save-button">Save</button>
-                <button id="reset-button">Reset to Default</button>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>YouTube Video Summarizer - Settings</title>
+        <link rel="stylesheet" href="options.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Settings</h1>
+
+            <div class="setting-group">
+                <h2 for="prompt-textarea">Youtube Summarizer Prompt:</h2>
+                <textarea
+                    id="prompt-textarea"
+                    placeholder="Loading default prompt..."
+                ></textarea>
+                <div class="button-group">
+                    <button id="save-button">Save</button>
+                    <button id="reset-button">Reset to Default</button>
+                </div>
+                <div id="status-message"></div>
             </div>
-            <div id="status-message"></div>
+
+            <div class="setting-group">
+                <h2 for="web-prompt-textarea">Web Page Summarizer Prompt:</h2>
+                <textarea
+                    id="web-prompt-textarea"
+                    placeholder="Loading default webpage prompt..."
+                ></textarea>
+                <div class="button-group">
+                    <button id="save-web-button">Save</button>
+                    <button id="reset-web-button">Reset to Default</button>
+                </div>
+                <div id="web-status-message"></div>
+            </div>
         </div>
-    </div>
-    <script src="options.js"></script>
-</body>
+        <script src="options.js"></script>
+    </body>
 </html>

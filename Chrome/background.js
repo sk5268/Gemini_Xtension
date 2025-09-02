@@ -32,52 +32,71 @@ Conclusion
 - ...
 `;
 
+const DEFAULT_WEB_PROMPT = `summarize`;
+
 async function getPromptText() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(['customPrompt'], (result) => {
+    chrome.storage.sync.get(["customPrompt"], (result) => {
       resolve(result.customPrompt || DEFAULT_PROMPT);
     });
   });
 }
 
-async function processAndPasteInGemini(urlToProcess) {
+async function getWebPromptText() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(["customWebPrompt"], (result) => {
+      resolve(result.customWebPrompt || DEFAULT_WEB_PROMPT);
+    });
+  });
+}
+
+async function processAndPasteInGemini(urlToProcess, promptTextOverride) {
   if (!urlToProcess) {
-    console.error("Gemini Summarize Extension: No URL provided for processing.");
+    console.error(
+      "Gemini Summarize Extension: No URL provided for processing.",
+    );
     return;
   }
 
-  const promptText = await getPromptText();
+  const promptText = promptTextOverride || (await getPromptText());
   const textToPaste = `${urlToProcess}\n\n${promptText}`;
 
   chrome.tabs.create({ url: "https://gemini.google.com/app" }, (newTab) => {
     if (!newTab || !newTab.id) {
-      console.error("Gemini Summarize Extension: Failed to create new Gemini tab or get its ID.");
+      console.error(
+        "Gemini Summarize Extension: Failed to create new Gemini tab or get its ID.",
+      );
       return;
     }
 
     function tabUpdateListener(tabId, changeInfo, tab) {
-      if (tabId === newTab.id && changeInfo.status === 'complete') {
+      if (tabId === newTab.id && changeInfo.status === "complete") {
         chrome.tabs.onUpdated.removeListener(tabUpdateListener);
 
         setTimeout(() => {
-          chrome.scripting.executeScript({
-            target: { tabId: newTab.id },
-            files: ['content.js']
-          }, () => {
-            chrome.tabs.sendMessage(newTab.id, {
+          chrome.tabs.sendMessage(
+            newTab.id,
+            {
               action: "pasteUrlToActiveElement",
-              textToPaste: textToPaste
-            }, (response) => {
+              textToPaste: textToPaste,
+            },
+            (response) => {
               if (chrome.runtime.lastError) {
                 // Tab may have navigated away or closed
-                console.warn("Gemini Summarize Extension: Error sending message to Gemini tab:", chrome.runtime.lastError.message);
+                console.warn(
+                  "Gemini Summarize Extension: Error sending message to Gemini tab:",
+                  chrome.runtime.lastError.message,
+                );
               } else if (response && response.success) {
                 // Success
               } else {
-                console.warn("Gemini Summarize Extension: Content script reported pasting was not successful or no suitable element found.", response ? response.reason : "No response details.");
+                console.warn(
+                  "Gemini Summarize Extension: Content script reported pasting was not successful or no suitable element found.",
+                  response ? response.reason : "No response details.",
+                );
               }
-            });
-          });
+            },
+          );
         }, 500);
       }
     }
@@ -96,18 +115,26 @@ chrome.action.onClicked.addListener(async (tab) => {
     });
   }
 
-  // Only proceed if the URL is a YouTube video link
   const youtubePatterns = [
     /^https?:\/\/(www\.)?youtube\.com\/watch\?/,
-    /^https?:\/\/youtu\.be\//
+    /^https?:\/\/youtu\.be\//,
   ];
-  const isYoutube = youtubePatterns.some(pattern => pattern.test(currentTabUrl));
-  if (!isYoutube) {
-    console.warn("Gemini Summarize Extension: Current tab is not a YouTube video. Action aborted.");
+  const isYoutube = youtubePatterns.some((pattern) =>
+    pattern.test(currentTabUrl),
+  );
+
+  if (!currentTabUrl) {
+    console.warn(
+      "Gemini Summarize Extension: No current tab URL found. Action aborted.",
+    );
     return;
   }
 
-  processAndPasteInGemini(currentTabUrl);
+  const promptText = isYoutube
+    ? await getPromptText()
+    : await getWebPromptText();
+
+  processAndPasteInGemini(currentTabUrl, promptText);
 });
 
 // Create context menu item
@@ -116,14 +143,23 @@ chrome.runtime.onInstalled.addListener(() => {
     id: "summarize-with-gemini",
     title: "Summarize with Gemini",
     contexts: ["link"],
-    targetUrlPatterns: ["*://*.youtube.com/watch*", "*://youtu.be/*"]
   });
 });
 
 // Listener for context menu item click
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "summarize-with-gemini" && info.linkUrl) {
-    processAndPasteInGemini(info.linkUrl);
+    const youtubePatterns = [
+      /^https?:\/\/(www\.)?youtube\.com\/watch\?/,
+      /^https?:\/\/youtu\.be\//,
+    ];
+    const isYoutube = youtubePatterns.some((pattern) =>
+      pattern.test(info.linkUrl),
+    );
+    const promptText = isYoutube
+      ? await getPromptText()
+      : await getWebPromptText();
+    processAndPasteInGemini(info.linkUrl, promptText);
   }
 });
 
@@ -131,6 +167,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processYouTubeLink" && message.url) {
     processAndPasteInGemini(message.url);
+    sendResponse({ success: true });
+  } else if (message.action === "processWebLink" && message.url) {
+    getWebPromptText().then((prompt) => {
+      processAndPasteInGemini(message.url, prompt);
+    });
     sendResponse({ success: true });
   }
   return true;
