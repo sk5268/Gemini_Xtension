@@ -34,6 +34,38 @@
                     <button id="reset-web-button">Reset to Default</button>
                 </div>
                 <div id="web-status-message"></div>
+
+                <div class="summarizer-service">
+                    <h3>Choose Summarizer Service:</h3>
+                    <div class="radio-options">
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="gemini"
+                                checked
+                            />
+                            Gemini
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="chatgpt"
+                            />
+                            ChatGPT
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="summarizer-service"
+                                value="grok"
+                            />
+                            Grok
+                        </label>
+                    </div>
+                    <div id="service-status-message"></div>
+                </div>
             </div>
         </div>
         <script src="options.js"></script>
