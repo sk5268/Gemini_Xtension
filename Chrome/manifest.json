@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Youtube Video Summarizer",
   "version": "1.9",
-  "description": "Summarize Youtube video using Google Gemini",
+  "description": "Summarize Youtube videos & Web Pages using Gemini, ChatGPT or Grok",
   "permissions": [
     "activeTab",
     "contextMenus",
