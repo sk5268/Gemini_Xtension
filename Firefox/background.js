@@ -36,7 +36,7 @@ const DEFAULT_WEB_PROMPT = `summarize`;
 
 async function getPromptText() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["customPrompt"], (result) => {
+    browser.storage.sync.get(["customPrompt"], (result) => {
       resolve(result.customPrompt || DEFAULT_PROMPT);
     });
   });
@@ -44,7 +44,7 @@ async function getPromptText() {
 
 async function getWebPromptText() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["customWebPrompt"], (result) => {
+    browser.storage.sync.get(["customWebPrompt"], (result) => {
       resolve(result.customWebPrompt || DEFAULT_WEB_PROMPT);
     });
   });
@@ -52,7 +52,7 @@ async function getWebPromptText() {
 
 async function getSummarizerService() {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["summarizerService"], (result) => {
+    browser.storage.sync.get(["summarizerService"], (result) => {
       resolve(result.summarizerService || "gemini");
     });
   });
@@ -107,7 +107,7 @@ async function processAndPasteInGemini(
     }
   }
 
-  chrome.tabs.create({ url: serviceUrl }, (newTab) => {
+  browser.tabs.create({ url: serviceUrl }, (newTab) => {
     if (!newTab || !newTab.id) {
       console.error(
         "Summarizer Extension: Failed to create new tab or get its ID.",
@@ -117,24 +117,24 @@ async function processAndPasteInGemini(
 
     function tabUpdateListener(tabId, changeInfo, tab) {
       if (tabId === newTab.id && changeInfo.status === "complete") {
-        chrome.tabs.onUpdated.removeListener(tabUpdateListener);
+        browser.tabs.onUpdated.removeListener(tabUpdateListener);
 
         setTimeout(() => {
           // Only attempt to paste text for Gemini (YouTube always uses Gemini)
           // ChatGPT and Grok URLs already include the query parameter
           if (serviceUrl === "https://gemini.google.com/app") {
-            chrome.tabs.sendMessage(
+            browser.tabs.sendMessage(
               newTab.id,
               {
                 action: "pasteUrlToActiveElement",
                 textToPaste: textToPaste,
               },
               (response) => {
-                if (chrome.runtime.lastError) {
+                if (browser.runtime.lastError) {
                   // Tab may have navigated away or closed
                   console.warn(
                     "Summarizer Extension: Error sending message to tab:",
-                    chrome.runtime.lastError.message,
+                    browser.runtime.lastError.message,
                   );
                 } else if (response && response.success) {
                   // Success
@@ -150,15 +150,15 @@ async function processAndPasteInGemini(
         }, 500);
       }
     }
-    chrome.tabs.onUpdated.addListener(tabUpdateListener);
+    browser.tabs.onUpdated.addListener(tabUpdateListener);
   });
 }
 
 // Listener for browser action (toolbar icon)
-chrome.action.onClicked.addListener(async (tab) => {
+browser.browserAction.onClicked.addListener(async (tab) => {
   let currentTabUrl = tab && tab.url ? tab.url : null;
   if (!currentTabUrl) {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0] && tabs[0].url) {
         currentTabUrl = tabs[0].url;
       }
@@ -177,8 +177,8 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 // Create context menu item
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
+browser.runtime.onInstalled.addListener(() => {
+  browser.contextMenus.create({
     id: "summarize-with-ai",
     title: "Summarize with AI",
     contexts: ["link"],
@@ -186,7 +186,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Listener for context menu item click
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "summarize-with-ai" && info.linkUrl) {
     const isYoutube = isYouTubeUrl(info.linkUrl);
     processAndPasteInGemini(info.linkUrl, null, isYoutube);
@@ -194,7 +194,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 // Add message listener for content script requests
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processYouTubeLink" && message.url) {
     processAndPasteInGemini(message.url, null, true); // true indicates YouTube URL
     sendResponse({ success: true });
