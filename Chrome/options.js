@@ -4,38 +4,83 @@
 // Default summarizer service (Gemini)
 const DEFAULT_SUMMARIZER_SERVICE = "gemini";
 
-const DEFAULT_PROMPT = `Extract and present all information from the video without omitting any detail. Follow these instructions:
+const DEFAULT_PROMPT = `# Adaptive Video Content Extraction Prompt
 
-1. Go through the entire video thoroughly.
-2. Capture and present everything spoken, including definitions, explanations, examples, references, and any background context.
-3. Include any on-screen text, slides, charts, or visual elements — describe them clearly if relevant to understanding.
-4. Maintain full detail; do not condense or summarize during the main extraction.
-5. Organize the output into logical sections based on the flow of the video.
-6. Translate any non-English words or phrases if they appear.
-7. At the end, write a concise summary (up to 200 words) covering the core message and major takeaways.
+Extract and present all information from the video without omitting any detail. Follow these instructions:
 
-Output format:
+## Core Requirements:
+1. Go through the entire video thoroughly
+2. Capture and present everything spoken, including definitions, explanations, examples, references, and any background context
+3. Include any on-screen text, slides, charts, or visual elements — describe them clearly if relevant to understanding
+4. Maintain full detail; do not condense or summarize during the main extraction
+5. Translate any non-English words or phrases if they appear
+6. **Dynamically adapt the output format** based on the video type and content structure
 
+## Format Selection Guidelines:
 
-Title: <Insert video title here if available>
+**For Educational/Tutorial Videos:**
+- Use structured sections with clear learning objectives
+- Include step-by-step processes
+- Highlight key concepts and definitions
+- Add practice examples or exercises mentioned
 
-=== Summary ===
-<200-word summary of the full video>
+**For Lectures/Academic Content:**
+- Organize by main topics and subtopics
+- Include theoretical frameworks
+- Capture all references and citations
+- Note any Q&A or discussion segments
 
-===============
-Introduction
-- ...
+**For News/Documentary Content:**
+- Present chronologically or by storyline
+- Include factual details, statistics, and sources
+- Capture interviews and expert opinions
+- Note visual evidence or footage described
 
-Section 1: <Descriptive title>
-- ...
+**For Entertainment/Narrative Content:**
+- Follow story structure or performance flow
+- Capture dialogue, scenes, and transitions
+- Include cultural references or context
+- Note visual/audio elements that enhance meaning
 
-Section 2: <Descriptive title>
-- ...
+**For Technical/Scientific Videos:**
+- Organize by methodology or process steps
+- Include all data, measurements, and results
+- Capture technical terminology with explanations
+- Note diagrams, formulas, or demonstrations
 
-...
+**For Product/Marketing Videos:**
+- Structure around features, benefits, and use cases
+- Include pricing, specifications, and comparisons
+- Capture testimonials and demonstrations
+- Note visual branding and key messaging
 
-Conclusion
-- ...
+**For Interview/Podcast Format:**
+- Organize by conversation topics or themes
+- Capture each speaker's contributions clearly
+- Include personal anecdotes and examples
+- Note discussion dynamics and key insights
+
+## Output Structure:
+
+**Title:** [Insert video title if available]
+
+**Video Type:** [Identify the primary category and explain why this format was chosen]
+
+**Summary:** [100-200 word overview of core message and major takeaways]
+
+**[Content organized in the most appropriate format for the identified video type]**
+
+## Emoji Usage:
+- Add contextually appropriate emojis to all section headings to enhance readability and visual navigation
+- Choose emojis that genuinely reflect the content of each section
+- Examples: 📚 for educational content, 🎯 for key points, 💡 for insights, 🔬 for scientific content, 🎬 for entertainment, 📊 for data/statistics, ⚙️ for technical processes, 🗣️ for interviews/quotes, ⏱️ for timelines, ✅ for conclusions/takeaways
+- Use emojis consistently throughout the document for similar section types
+
+## Additional Notes:
+- If the video combines multiple formats, use a hybrid approach that serves the content best
+- Always prioritize clarity and logical flow over rigid structure adherence
+- Include timestamps if they help with navigation or reference
+- Note any significant visual elements that cannot be described in text alone
 `;
 const DEFAULT_WEB_PROMPT = `summarize`;
 
@@ -53,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
   );
   const summarizerRadioButtons =
     document.getElementsByName("summarizer-service");
+  const switchBackToggle = document.getElementById("switch-back-toggle");
 
   // Load saved prompt or use default
   chrome.storage.sync.get(["customPrompt"], (result) => {
@@ -78,6 +124,36 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
+
+  if (switchBackToggle) {
+    chrome.storage.sync.get(["switchBackToOriginalTab"], (result) => {
+      const storedValue = result.switchBackToOriginalTab;
+      const isEnabled = storedValue === undefined ? true : Boolean(storedValue);
+      switchBackToggle.checked = isEnabled;
+    });
+
+    switchBackToggle.addEventListener("change", function () {
+      const newValue = this.checked;
+      chrome.storage.sync.set(
+        {
+          switchBackToOriginalTab: newValue,
+        },
+        () => {
+          if (chrome.runtime.lastError) {
+            showServiceStatusMessage(
+              "Error saving tab preference: " + chrome.runtime.lastError.message,
+              "error",
+            );
+          } else {
+            showServiceStatusMessage(
+              "Switch back to original tab " + (newValue ? "enabled!" : "disabled!"),
+              "success",
+            );
+          }
+        },
+      );
+    });
+  }
 
   // Add event listeners for radio buttons
   for (const radioButton of summarizerRadioButtons) {
