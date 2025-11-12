@@ -72,6 +72,7 @@ async function processAndPasteInGemini(
   urlToProcess,
   promptTextOverride,
   isYoutubeOverride = null,
+  originalTabId = null,
 ) {
   if (!urlToProcess) {
     console.error("Summarizer Extension: No URL provided for processing.");
@@ -137,7 +138,10 @@ async function processAndPasteInGemini(
                     chrome.runtime.lastError.message,
                   );
                 } else if (response && response.success) {
-                  // Success
+                  // Success - switch back to original tab if provided
+                  if (originalTabId) {
+                    chrome.tabs.update(originalTabId, { active: true });
+                  }
                 } else {
                   console.warn(
                     "Summarizer Extension: Content script reported pasting was not successful or no suitable element found.",
@@ -146,6 +150,11 @@ async function processAndPasteInGemini(
                 }
               },
             );
+          } else {
+            // For non-Gemini services, switch back to original tab after load
+            if (originalTabId) {
+              chrome.tabs.update(originalTabId, { active: true });
+            }
           }
         }, 500);
       }
@@ -173,7 +182,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   }
 
   const isYoutube = isYouTubeUrl(currentTabUrl);
-  processAndPasteInGemini(currentTabUrl, null, isYoutube);
+  processAndPasteInGemini(currentTabUrl, null, isYoutube, tab.id);
 });
 
 // Create context menu item
@@ -189,17 +198,17 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "summarize-with-ai" && info.linkUrl) {
     const isYoutube = isYouTubeUrl(info.linkUrl);
-    processAndPasteInGemini(info.linkUrl, null, isYoutube);
+    processAndPasteInGemini(info.linkUrl, null, isYoutube, tab.id);
   }
 });
 
 // Add message listener for content script requests
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "processYouTubeLink" && message.url) {
-    processAndPasteInGemini(message.url, null, true); // true indicates YouTube URL
+    processAndPasteInGemini(message.url, null, true, sender.tab.id); // true indicates YouTube URL
     sendResponse({ success: true });
   } else if (message.action === "processWebLink" && message.url) {
-    processAndPasteInGemini(message.url, null, false); // false indicates non-YouTube URL
+    processAndPasteInGemini(message.url, null, false, sender.tab.id); // false indicates non-YouTube URL
     sendResponse({ success: true });
   }
   return true;
