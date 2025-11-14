@@ -58,8 +58,6 @@ Extract and present all information from the video without omitting any detail. 
 
 **Title:** [Insert video title if available]
 
-**Video Type:** [Identify the primary category and explain why this format was chosen]
-
 **Summary:** [100-200 word overview of core message and major takeaways]
 
 **[Content organized in the most appropriate format for the identified video type]**
