@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Youtube Video Summarizer",
-  "version": "1.9",
+  "version": "2.0",
   "description": "Summarize Youtube videos & Web Pages using Gemini, ChatGPT or Grok",
   "browser_specific_settings": {
     "gecko": {
